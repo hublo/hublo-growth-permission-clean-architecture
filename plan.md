@@ -7,7 +7,7 @@
 
 ## Context (2 min)
 
-- New project Prmission. White card (1 slide)
+- New project Permission. White card (1 slide)
 - Dealing with heavy legacy sails JS (1 slide)
 - How to do it profitable to HUBLO and tech team. Think Platform. (1 slide)
 
