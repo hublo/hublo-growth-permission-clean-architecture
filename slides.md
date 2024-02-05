@@ -2,7 +2,7 @@
 title: Leveraging Clean Architecture For Enhanced Permission Management
 # separator: <!--s-->
 # verticalSeparator: <!--v-->
-# theme: solarized
+theme: moon
 # revealOptions:
 #   transition: 'fade'
 ---
@@ -31,17 +31,18 @@ Note: speaker notes FTW!
 
 ## Context
 
-- Legacy (sails, etc)
-- Choice of a clean design approach.
-- Discussion process that led to the selection of clean architecture.
+- Brand New Project. FREEEDOM! gif Frozen
+- We are stuck with a legacy system (serviceApp => Sails.js). gif Titanic
+- We need to manage permissions. gif Matrix
 
 ---
 
 ## Why clean architecture?
 
 - Define clean architecture and its relevance to the project (SOLID, etc.)
+![SOLID](./images/solid.png)
 
-- Explain the alignment of clean architecture principles with the project's goals.
+- Explain the alignment of **clean** architecture principles with the project's goals.
 
 ---
 

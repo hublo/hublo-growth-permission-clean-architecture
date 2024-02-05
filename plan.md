@@ -1,37 +1,25 @@
-# Leveraging Clean Architecture For Enhanced Permission Management
+# How we did Clean Architecture
 
 ## Introduction (1 min)
 
-- Briefly introduce the team and the topic.
-- Outline the objectives of the presentation.
+- Briefly introduce the team and the topic. (1 slide)
+- 1 sentence to introduce the plan. (1 slide)
 
 ## Context (2 min)
 
-- Describe the need for a new system to manage user permissions.
-  - historic, legacy (sails, etc)
-- Explain the choice of a clean design approach.
-- Highlight the discussion process that led to the selection of clean architecture.
+- New project Prmission. White card (1 slide)
+- Dealing with heavy legacy sails JS (1 slide)
+- How to do it profitable to HUBLO and tech team. Think Platform. (1 slide)
 
-## Why clean architecture? (3 min) "TOOM"
+## Clean Architecture (10 min) "TOM/PIERRE"
  
-- Define clean architecture and its relevance to the project (SOLID, etc.)
+- to be planned and designed
 
-- Explain the alignment of clean architecture principles with the project's goals.
+## How we did it (15 min) "AMROU/VALENTIN"
 
-## Architecture Overview (5 min)
+- to be planned and designed
 
-- Present the architecture of the system. 
-  - Schemas
-- Illustrate how clean architecture influences the architectural decisions.
-
-
-## Components and Implementation (5 min)
-
-- Detail the key components of the system (e.g., entities, use-cases, ports, builders, repositories).
-- Showcase code snippets/examples in TypeScript.
-- Explain how TypeScript enhances clean architecture implementation (type safety, interfaces, etc.).
-
-## Benefits of the Chosen Approach (5 min) "TOOM/VALE"
+## Benefits of the Chosen Approach (5 min) "TOM/VALE"
 
 - Clean Code and Maintainability: 
   - readability, clear function name
