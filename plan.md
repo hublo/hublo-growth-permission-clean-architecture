@@ -19,6 +19,23 @@
 
 - to be planned and designed
 
+- Clean archtecture
+- From Controller Side, we used nestjs (built-ins), external trigger
+  - (nest-built-in) decorators pattern for
+    - parsers (For incomming)
+    - validations/transformations (For incomming)
+    - documentation (openapi)
+    - ...
+    - and also, 
+    - Guards (authn & authz), 
+    - ~~Filter~~
+    - Interceptors + AOP (Aspect oriented programming) , as error handlers 
+  - letting us having a DRY and declarative code
+  - So that we managed to prepare the Data Transfer Object (DTO) to be passed as expected to use case
+  - ??To know, that even if guards are business related, since those are project wide usage, we declare them on the controller but those are project-wide used??
+
+  
+
 ## Benefits of the Chosen Approach (5 min) "TOM/VALE"
 
 - Clean Code and Maintainability: 
