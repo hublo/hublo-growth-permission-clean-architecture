@@ -4,6 +4,7 @@ title: Leveraging Clean Architecture For Enhanced Permission Management
 # verticalSeparator: <!--v-->
 theme: moon
 verticalSeparator: "---vertical"
+css: [custom-theme.css]
 # revealOptions:
 #   transition: 'fade'
 ---
@@ -119,8 +120,6 @@ export interface PermissionPort {
 ### Implementation
 #### Business logic: Use case example 
 
-<span style="font-size:0.7em;">
-
 ```typescript
 // get-all-permissions.use-case.ts
 @Injectable()
@@ -143,15 +142,151 @@ export class GetAllPermissions {
   }
 }
 ```
-</span>
 
 ---
 
-
 ### Implementation
-#### Code Organization: Infrastructure
+#### Infrastructure
+
 
 ![Implementation](./images/code_org/infrastructure.drawio.png)
+
+---vertical
+
+### Implementation
+#### Infrastructure: Persistence
+
+```typescript
+@Injectable()
+export class PermissionPortImpl implements PermissionPort {
+  constructor(private readonly permissionRepository: PermissionRepository) {}
+
+  
+  async findById(id: string): Promise<Permission> {
+    const permission = await this.permissionRepository.findPermissionById(id)
+
+    if (!permission) {
+      throw new PermissionNotFoundError(id)
+    }
+
+    return plainToInstance(PrismaPermission, permission)
+  }
+  
+  async create(permission: PrismaPermission): Promise<Permission> {
+    try {
+      const created =
+        await this.permissionRepository.createPermission(permission)
+
+      return plainToInstance(PrismaPermission, created)
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new PermissionAlreadyExistsError(permission.id)
+      }
+
+      throw error
+    }
+  }
+
+  // [...]  
+}
+```
+
+---vertical
+
+### Implementation
+#### Infrastructure: Controllers
+
+```typescript
+// reorganize-permission.controller.ts
+@ApiTags('Permissions')
+@UseInterceptors(PermissionErrorInterceptor)
+@UseGuards(SuperAdminAuthGuard)
+@Controller('permission')
+export class ReorganizePermissionController {
+  constructor(private readonly useCase: ReorganizePermission) {}
+
+  @ApiRoute({
+    summary: 'Reorganize permissions',
+    ok: {
+      description: 'Permission reorganized',
+      type: PermissionDetailedResponseDto,
+    },
+    unauthorized: {},
+    forbidden: {},
+    internalServerError: {},
+  })
+  @ApiBearerAuth()
+  @Patch(':id/reorganize')
+  async reorganizePermission(
+    @Body() toUpdate: ReorganizePermissionBodyDto,
+    @Param() params: ReorganizePermissionParamsDto,
+  ) {
+    const res = await this.useCase.execute({ ...toUpdate, ...params })
+    return plainToInstance(PermissionDetailedResponseDto, res)
+  }
+}
+```
+---vertical
+
+### Implementation
+#### Infrastructure: Controllers
+
+```typescript
+export class ReorganizePermissionBodyDto {
+  @IsInt()
+  @Max(2147483647) // int4 max constraints (postgres)
+  @Min(0) // should be -2147483647, but we take 0 since it will not be necessary
+  newCategoryId: number
+}
+
+export class ReorganizePermissionParamsDto {
+  @IsString()
+  @IsNotEmpty()
+  id: string
+}
+```
+
+---vertical
+
+### Implementation
+#### Infrastructure: Mixins
+
+```typescript
+export const GetterSetterInheriter = <TBase extends Constructor>(
+  Base: TBase,
+) => {
+  return class extends Base {
+    constructor(...args: any[]) {
+      super(...args)
+      this.importGettersAndSetters()
+    }
+
+    getGettersAndSetters = (prototype: Constructor) => {
+       // [...]
+      }
+      > = {}
+
+      const findAllGettersAndSetters = (
+        currentPrototype: Constructor,
+        aggregator: Record<
+          string,
+          {
+            get?: () => any
+            set?: (_v: any) => void
+            hasPrivateDeclaration?: boolean
+          }
+        > = {},
+      ) => {
+         // [...]
+      return gettersSetters
+    }
+
+    importGettersAndSetters = () => {
+      // [...]
+    }
+  }
+}
+```
 
 ---
 
