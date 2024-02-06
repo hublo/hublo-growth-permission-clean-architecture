@@ -7,17 +7,10 @@ verticalSeparator: "---vertical"
 css: [custom-theme.css]
 # revealOptions:
 #   transition: 'fade'
----
-# Plan
-
-- Introduction
-- Context
-- Etc.
 
 ---
 
 ## Introduction
-
 - Team
 - Topic
 - Objectives of the presentation.
@@ -28,23 +21,43 @@ css: [custom-theme.css]
 > Best Team Ever.
 
 Note: speaker notes FTW!
-
 ---
 
 ## Context
-
 - Brand New Project. FREEEDOM! gif Frozen
 - We are stuck with a legacy system (serviceApp => Sails.js). gif Titanic
 - We need to manage permissions. gif Matrix
 
 ---
 
-## Why clean architecture?
+## Clean Architecture
 
-- Define clean architecture and its relevance to the project (SOLID, etc.)
-![SOLID](./images/solid.png)
+---
 
-- Explain the alignment of **clean** architecture principles with the project's goals.
+### What is Clean Architecture?
+- **Purpose:** Design software with loose coupling and high cohesion.
+- **Structure:** Organized into layers with:
+  - **Entities** at the core (business objects and rules).
+  - **Use Cases** encapsulating business logic.
+  - **Interface Adapters** translating between web, database, and external agency formats.
+  - **Frameworks & Drivers** as the outermost layer (UIs, databases).
+- **Key Concept:** Dependency Rule - Dependencies must point inward, from outer layers to inner layers.
+
+---
+
+### SOLID Principles
+solid-principles.md
+
+---
+
+---
+
+### Benefits of Clean Architecture
+- **Flexibility:** Easily adapt to new requirements without significant rework.
+- **Testability:** Independent layers allow for unit testing of business logic without UI, database, or external dependencies.
+- **Maintainability:** Simplified updates and enhancements with minimal impact on existing functionality.
+- **Readability:** Clear separation of concerns makes it easier for product managers and new developers to understand the system structure.
+- **Framework Independence:** Business rules are not tied to the technology stack, making it easier to switch frameworks or libraries.
 
 ---
 
