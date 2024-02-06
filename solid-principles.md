@@ -4,11 +4,14 @@ theme: ./theme/hublo.css
 # revealOptions:
 #   transition: 'fade'
 ---
-# SOLID
-![SOLID](./images/solid.png)
+
+![SOLID](./images/solid_noir.png)
+
 ---
 
-## **Single Responsibility Principle (SRP):** A class should have only one reason to change.
+## **Single Responsibility Principle (SRP)**
+
+A class should have only one reason to change.
 
 ----
 ### Single Responsibility Principle (SRP)
@@ -44,7 +47,9 @@ class InstitutionHublerAvailabilities {
 ```
 ---
 
-## **Open/Closed** Principle (OCP): Software entities should be open for extension, but closed for modification.
+## **Open/Closed** Principle (OCP)
+
+Software entities should be open for extension, but closed for modification.
 
 ----
 ### Open/Closed Principle (OCP)
@@ -101,7 +106,9 @@ class NativeShift extends Shift {
 
 ---
 
-## **Liskov Substitution Principle (LSP):** Subtypes must be substitutable for their base types.
+## **Liskov Substitution Principle (LSP)** 
+
+Subtypes must be substitutable for their base types.
 
 ----
 ### Liskov Substitution Principle (LSP)
@@ -154,7 +161,9 @@ class PrismaMission extends Mission {
 
 ---
 
-## **Interface Segregation Principle (ISP):** No client should be forced to depend on methods it does not use.
+## **Interface Segregation Principle (ISP)** 
+
+No client should be forced to depend on methods it does not use.
 
 ----
 ### Interface Segregation Principle (ISP)
@@ -183,7 +192,9 @@ interface AdminShiftService {
 ```
 ---
 
-## **Dependency Inversion Principle (DIP):** Depend on abstractions, not on concretions.
+## **Dependency Inversion Principle (DIP)** 
+
+Depend on abstractions, not on concretions.
 
 ----
 ### Dependency Inversion Principle (DIP)
