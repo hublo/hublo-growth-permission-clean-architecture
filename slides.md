@@ -103,7 +103,7 @@ export abstract class Permission extends SoftDeleteEntity {
 
 ### Implementation
 #### Business logic: Port example 
-> **Use Case <- PORT (interface) -> Repository**
+> **Use Case ← PORT (interface) → Repository**
 
 ```typescript
 // permission.port.ts
@@ -119,6 +119,8 @@ export interface PermissionPort {
 
 ### Implementation
 #### Business logic: Use case example 
+
+<span style="font-size:0.75em;">
 
 ```typescript
 // get-all-permissions.use-case.ts
@@ -143,11 +145,12 @@ export class GetAllPermissions {
 }
 ```
 
+</span>
+
 ---
 
 ### Implementation
 #### Infrastructure
-
 
 ![Implementation](./images/code_org/infrastructure.drawio.png)
 
@@ -161,7 +164,6 @@ export class GetAllPermissions {
 export class PermissionPortImpl implements PermissionPort {
   constructor(private readonly permissionRepository: PermissionRepository) {}
 
-  
   async findById(id: string): Promise<Permission> {
     const permission = await this.permissionRepository.findPermissionById(id)
 
@@ -171,30 +173,20 @@ export class PermissionPortImpl implements PermissionPort {
 
     return plainToInstance(PrismaPermission, permission)
   }
-  
-  async create(permission: PrismaPermission): Promise<Permission> {
-    try {
-      const created =
-        await this.permissionRepository.createPermission(permission)
-
-      return plainToInstance(PrismaPermission, created)
-    } catch (error) {
-      if (error.code === 'P2002') {
-        throw new PermissionAlreadyExistsError(permission.id)
-      }
-
-      throw error
-    }
-  }
-
   // [...]  
 }
+
+export class PrismaPermission extends GetterSetterInheriter(
+  PrismaPermissionBase,
+) {}
 ```
 
 ---vertical
 
 ### Implementation
 #### Infrastructure: Controllers
+
+<span style="font-size:0.75em;">
 
 ```typescript
 // reorganize-permission.controller.ts
@@ -205,16 +197,7 @@ export class PermissionPortImpl implements PermissionPort {
 export class ReorganizePermissionController {
   constructor(private readonly useCase: ReorganizePermission) {}
 
-  @ApiRoute({
-    summary: 'Reorganize permissions',
-    ok: {
-      description: 'Permission reorganized',
-      type: PermissionDetailedResponseDto,
-    },
-    unauthorized: {},
-    forbidden: {},
-    internalServerError: {},
-  })
+  @ApiRoute(/** */)
   @ApiBearerAuth()
   @Patch(':id/reorganize')
   async reorganizePermission(
@@ -226,10 +209,15 @@ export class ReorganizePermissionController {
   }
 }
 ```
+
+</span>
+
 ---vertical
 
 ### Implementation
 #### Infrastructure: Controllers
+
+<span style="font-size:0.8em;">
 
 ```typescript
 export class ReorganizePermissionBodyDto {
@@ -245,11 +233,15 @@ export class ReorganizePermissionParamsDto {
   id: string
 }
 ```
+</span>
 
 ---vertical
 
 ### Implementation
-#### Infrastructure: Mixins
+#### Infrastructure: Mixins exemple 
+**😮**
+
+<span style="font-size:0.65em;">
 
 ```typescript
 export const GetterSetterInheriter = <TBase extends Constructor>(
@@ -260,40 +252,24 @@ export const GetterSetterInheriter = <TBase extends Constructor>(
       super(...args)
       this.importGettersAndSetters()
     }
-
     getGettersAndSetters = (prototype: Constructor) => {
-       // [...]
-      }
-      > = {}
-
+      // [...]
       const findAllGettersAndSetters = (
         currentPrototype: Constructor,
-        aggregator: Record<
-          string,
-          {
-            get?: () => any
-            set?: (_v: any) => void
-            hasPrivateDeclaration?: boolean
-          }
-        > = {},
-      ) => {
-         // [...]
-      return gettersSetters
+        aggregator: Record<string, { get?: () => any; set?: (_v: any) => void; hasPrivateDeclaration?: boolean }> = {}
+      ) => 
+      // [...]
     }
-
-    importGettersAndSetters = () => {
+    importGettersAndSetters = () => { 
+      const extendedClassPrototype: Constructor = Object.getPrototypeOf(this)
+      const gettersSetters = this.getGettersAndSetters(extendedClassPrototype)
       // [...]
     }
   }
 }
 ```
 
----
-
-### Implementation
-#### somm
-
-![Implementation](./images/code_org/infrastructure.drawio.png)
+</span>
 
 ---
 
