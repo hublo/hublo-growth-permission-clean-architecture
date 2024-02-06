@@ -41,7 +41,7 @@ _<small>Don't tie your business to your interface</small>_
 
 #### **The entities**
 
-- Object that contain of have easy access to business data
+- Object that contain or have easy access to business data
 - They implement the critical business rules that operate on that data
 - They are not plain-old TS objects representing the DB schema
 
@@ -64,4 +64,75 @@ _<small>Don't tie your business to your interface</small>_
 
 ## A use-case, step by step
 
+----
 
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/1-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/2-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/3-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/4-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/5-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/4-usecase.png)
+
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/6-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/7-usecase.png)
+
+---
+
+## **Entities**, grosso modo
+
+![](./images/entity.png)
+
+---
+
+## Things to keep in mind
+
+----
+
+### Readability
+
+_<small>Prosaic code is easier to read and understand</small>_
+
+----
+
+### Ubiquitous language
+
+_<small>Use the same language in your code as in your business</small>_
+
+> Use a glossary to be sure everybody use the same words
