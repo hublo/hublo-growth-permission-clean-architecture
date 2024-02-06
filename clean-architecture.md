@@ -41,7 +41,7 @@ _<small>Don't tie your business to your interface</small>_
 
 #### **The entities**
 
-- Object that contain of have easy access to business data
+- Object that contain or have easy access to business data
 - They implement the critical business rules that operate on that data
 - They are not plain-old TS objects representing the DB schema
 
