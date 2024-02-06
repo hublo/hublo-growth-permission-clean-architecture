@@ -147,18 +147,104 @@ export class GetAllPermissions {
 
 ---
 
-
 ### Implementation
 #### Code Organization: Infrastructure
 
 ![Implementation](./images/code_org/infrastructure.drawio.png)
 
----
+---vertical
 
+### Implementation
+#### somm
+
+![Implementation](./images/code_org/infrastructure.drawio.png)
+
+---
 
 ### Implementation
 #### Code Organization: Tests
 
 ![Implementation](./images/code_org/tests.drawio.png)
 
----
+---vertical
+
+### Implementation
+#### Tests: Use case example 
+
+> No mocks, in memory db
+
+<span style="font-size:0.5em;">
+
+```typescript
+describe('GetAllPermissionsUseCase', () => {
+  let permissionPort: InMemoryPermissionPort
+  let useCase: GetAllPermissions
+
+  describe('execute', () => {
+    beforeEach(() => {
+      const parentCategory = PermissionCategoryStubFactory.createMainCategory({
+        id: 1,
+      })
+
+      permissionPort = new InMemoryPermissionPort([
+        new PermissionStub({
+          id: 'permission-id',
+          scope: new ScopeStub({ id: 'permission-name' }),
+          category: new PermissionCategoryStub({
+            id: 2,
+            labelKey: 'old-category-name',
+            parentCategory: parentCategory,
+          }),
+        }),
+      ])
+
+      useCase = new GetAllPermissions(permissionPort)
+    })
+// [...]
+```
+</span>
+
+---vertical
+
+### Implementation
+#### Tests: Doubles 
+
+![Implementation](./images/code_org/tests_inside.drawio.png)
+
+---vertical
+
+### Implementation
+#### Tests: Doubles → Ports 
+**😮**
+
+<span style="font-size:0.6em;">
+
+```typescript
+// base.port.in-memory.ts
+const buildInMemoryPort = <EntityType>(args: {
+  NotFoundError: typeof DomainError
+  AlreadyExistsError?: typeof DomainError
+}) => {
+  class InMemoryBasePort {
+    constructor(public entities: EntityType[]) {
+      this.entities = entities
+    }
+
+// [...]
+export const InMemoryBasePortMixin = <EntityType>(args: ...) => buildInMemoryPort<EntityType>(args)
+
+// permission.port.in-memory.ts
+export class InMemoryPermissionPort
+  extends InMemoryBasePortMixin<Permission>({
+    NotFoundError: PermissionNotFoundError,
+    AlreadyExistsError: PermissionAlreadyExistsError,
+  })
+  implements PermissionPort
+{
+  findAll(): Promise<Permission[]> {
+    return Promise.resolve(this.entities)
+  }
+}
+
+```
+</span>
