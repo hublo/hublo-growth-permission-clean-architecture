@@ -3,7 +3,6 @@ title: Leveraging Clean Architecture For Enhanced Permission Management
 # separator: <!--s-->
 # verticalSeparator: <!--v-->
 theme: moon
-verticalSeparator: "---vertical"
 css: [custom-theme.css]
 # revealOptions:
 #   transition: 'fade'
@@ -88,7 +87,7 @@ solid-principles.md
 
 ![Implementation](./images/code_org/business_logic.drawio.png)
 
----vertical
+----
 
 ### Implementation
 #### Business logic: Entity example 
@@ -112,7 +111,7 @@ export abstract class Permission extends SoftDeleteEntity {
 }
 ```
 
----vertical
+----
 
 ### Implementation
 #### Business logic: Port example 
@@ -128,7 +127,7 @@ export interface PermissionPort {
 }
 ```
 
----vertical
+----
 
 ### Implementation
 #### Business logic: Use case example 
@@ -167,7 +166,7 @@ export class GetAllPermissions {
 
 ![Implementation](./images/code_org/infrastructure.drawio.png)
 
----vertical
+----
 
 ### Implementation
 #### Infrastructure: Persistence
@@ -194,7 +193,7 @@ export class PrismaPermission extends GetterSetterInheriter(
 ) {}
 ```
 
----vertical
+----
 
 ### Implementation
 #### Infrastructure: Controllers
@@ -225,7 +224,7 @@ export class ReorganizePermissionController {
 
 </span>
 
----vertical
+----
 
 ### Implementation
 #### Infrastructure: Controllers
@@ -248,7 +247,7 @@ export class ReorganizePermissionParamsDto {
 ```
 </span>
 
----vertical
+----
 
 ### Implementation
 #### Infrastructure: Mixins exemple 
@@ -291,7 +290,7 @@ export const GetterSetterInheriter = <TBase extends Constructor>(
 
 ![Implementation](./images/code_org/tests.drawio.png)
 
----vertical
+----
 
 ### Implementation
 #### Tests: Use case example 
@@ -329,14 +328,14 @@ describe('GetAllPermissionsUseCase', () => {
 ```
 </span>
 
----vertical
+----
 
 ### Implementation
 #### Tests: Doubles 
 
 ![Implementation](./images/code_org/tests_inside.drawio.png)
 
----vertical
+----
 
 ### Implementation
 #### Tests: Doubles → Ports 
