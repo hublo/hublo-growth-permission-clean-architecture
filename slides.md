@@ -2,8 +2,7 @@
 title: Leveraging Clean Architecture For Enhanced Permission Management
 # separator: <!--s-->
 # verticalSeparator: <!--v-->
-theme: moon
-css: [custom-theme.css]
+theme: ./theme/hublo.css
 # revealOptions:
 #   transition: 'fade'
 
@@ -73,7 +72,7 @@ solid-principles.md
 ---
 
 ### Implementation
-#### Code Organization: Base organization
+#### Code Organization: **Base organization**
 
 
 ![Implementation](./images/code_org/base.drawio.png)
@@ -83,14 +82,14 @@ solid-principles.md
 ---
 
 ### Implementation
-#### Code Organization: Business logic
+#### Code Organization: **Business logic**
 
 ![Implementation](./images/code_org/business_logic.drawio.png)
 
 ----
 
 ### Implementation
-#### Business logic: Entity example 
+#### Business logic: **Entity example** 
 
 ```typescript
 // permission.entity.ts
@@ -114,7 +113,7 @@ export abstract class Permission extends SoftDeleteEntity {
 ----
 
 ### Implementation
-#### Business logic: Port example 
+#### Business logic: **Port example**
 > **Use Case ← PORT (interface) → Repository**
 
 ```typescript
@@ -130,7 +129,7 @@ export interface PermissionPort {
 ----
 
 ### Implementation
-#### Business logic: Use case example 
+#### Business logic: **Use case example** 
 
 <span style="font-size:0.75em;">
 
@@ -162,41 +161,21 @@ export class GetAllPermissions {
 ---
 
 ### Implementation
-#### Infrastructure
+#### **Infrastructure**
 
 ![Implementation](./images/code_org/infrastructure.drawio.png)
 
 ----
 
 ### Implementation
-#### Infrastructure: Persistence
+#### Infrastructure: **Reminder (framework)**
 
-```typescript
-@Injectable()
-export class PermissionPortImpl implements PermissionPort {
-  constructor(private readonly permissionRepository: PermissionRepository) {}
-
-  async findById(id: string): Promise<Permission> {
-    const permission = await this.permissionRepository.findPermissionById(id)
-
-    if (!permission) {
-      throw new PermissionNotFoundError(id)
-    }
-
-    return plainToInstance(PrismaPermission, permission)
-  }
-  // [...]  
-}
-
-export class PrismaPermission extends GetterSetterInheriter(
-  PrismaPermissionBase,
-) {}
-```
+<img src='./images/usecases/4-usecase.png' width='70%'/>
 
 ----
 
 ### Implementation
-#### Infrastructure: Controllers
+#### Infrastructure: **Controllers**
 
 <span style="font-size:0.75em;">
 
@@ -227,9 +206,12 @@ export class ReorganizePermissionController {
 ----
 
 ### Implementation
-#### Infrastructure: Controllers
+#### Infrastructure: **Controllers**
 
-<span style="font-size:0.8em;">
+> - We choose a "blacklist" approach to avoud the `@Expose` & `@Exclude` verbose decorators
+> - Nestjs Plugin to avoid `@ApiProperty` decorators
+
+<span style="font-size:0.7em;">
 
 ```typescript
 export class ReorganizePermissionBodyDto {
@@ -250,28 +232,114 @@ export class ReorganizePermissionParamsDto {
 ----
 
 ### Implementation
-#### Infrastructure: Mixins exemple 
-**😮**
+#### Infrastructure: **Reminder (adapters & implementation)**
 
-<span style="font-size:0.65em;">
+<img src='./images/usecases/4-usecase.png' width='70%'/>
+
+----
+
+### Implementation
+#### Infrastructure: **Persistence**
+
+<span style="font-size:0.7em;">
 
 ```typescript
-export const GetterSetterInheriter = <TBase extends Constructor>(
-  Base: TBase,
-) => {
-  return class extends Base {
+// permission.port.impl.ts
+@Injectable()
+export class PermissionPortImpl implements PermissionPort {
+  constructor(private readonly permissionRepository: PermissionRepository) {}
+
+  async findById(id: string): Promise<Permission> {
+    const permission = await this.permissionRepository.findPermissionById(id)
+
+    if (!permission) {
+      throw new PermissionNotFoundError(id)
+    }
+
+    return plainToInstance(PrismaPermission, permission)
+  }
+  // [...]  
+}
+```
+</span>
+
+----
+
+### Implementation
+#### Infrastructure: **Persistence, before we continue**
+
+<span style="font-size:0.7em;"> *To Know:* </span>
+
+- <span style="font-size:0.7em;"> getters, setters in JS are not singly inherited (if one getter/setter exists and you decalre the missing one, it will not inherit, it will overwrite and ignore)</span>
+- <span style="font-size:0.7em;"> Prisma, the ORM we are using (db detail) </span>
+  - <span style="font-size:0.7em;"> needs the schema properties getters & setters both to be declared </span>
+  - <span style="font-size:0.7em;"> if schema properties are not explicitly exposed, it needs a toJSON method to expose them  </span>
+
+
+----
+
+### Implementation
+#### Infrastructure: **Persistence**
+
+<span style="font-size:0.7em;">
+
+```typescript
+// permission.prisma.entity.ts
+export class PrismaPermissionBase extends Permission implements PrismaAdapter {
+  get categoryId() {
+    return this._category?.id
+  }
+
+  set category(value: PrismaPermissionCategory) {
+    this._category = plainToInstance(PrismaPermissionCategory, value)
+  }
+
+  // prisma compliant toJSON method allowing to map entity into prisma accepted fields
+  toJSON() {
+    id: this._id,
+    scopeId: this._scope.displayFull(),
+    categoryId: this._category.id,
+    deletedAt: this._deletedAt,
+  }
+}
+
+export class PrismaPermission extends GetterSetterInheriter(
+  PrismaPermissionBase,
+) {}
+```
+</span>
+
+----
+
+### Implementation
+#### Infrastructure: **Mixins exemple** 
+**😮**
+
+<span style="font-size:0.6em; width:100%;">
+
+```typescript
+// prisma-injector.mixin.ts
+export const GetterSetterInheriter = <TBase extends Constructor>(Base: TBase ) => {
+
+  return class extends Base {  
     constructor(...args: any[]) {
       super(...args)
       this.importGettersAndSetters()
     }
+
     getGettersAndSetters = (prototype: Constructor) => {
       // [...]
       const findAllGettersAndSetters = (
         currentPrototype: Constructor,
-        aggregator: Record<string, { get?: () => any; set?: (_v: any) => void; hasPrivateDeclaration?: boolean }> = {}
+        aggregator: Record<string, { 
+          get?: () => any; 
+          set?: (_v: any) => void; 
+          hasPrivateDeclaration?: boolean 
+        }> = {}
       ) => 
       // [...]
     }
+    
     importGettersAndSetters = () => { 
       const extendedClassPrototype: Constructor = Object.getPrototypeOf(this)
       const gettersSetters = this.getGettersAndSetters(extendedClassPrototype)
@@ -286,16 +354,16 @@ export const GetterSetterInheriter = <TBase extends Constructor>(
 ---
 
 ### Implementation
-#### Code Organization: Tests
+#### **Tests**
 
 ![Implementation](./images/code_org/tests.drawio.png)
 
 ----
 
 ### Implementation
-#### Tests: Use case example 
+#### Tests: **Use case example**
 
-> No mocks, in memory db
+> No mocks, in memory state
 
 <span style="font-size:0.5em;">
 
@@ -331,32 +399,19 @@ describe('GetAllPermissionsUseCase', () => {
 ----
 
 ### Implementation
-#### Tests: Doubles 
+#### Tests: **Doubles**
 
 ![Implementation](./images/code_org/tests_inside.drawio.png)
 
 ----
 
 ### Implementation
-#### Tests: Doubles → Ports 
+#### Tests: **Doubles → Ports** 
 **😮**
 
-<span style="font-size:0.6em;">
+<span style="font-size:0.7em;">
 
 ```typescript
-// base.port.in-memory.ts
-const buildInMemoryPort = <EntityType>(args: {
-  NotFoundError: typeof DomainError
-  AlreadyExistsError?: typeof DomainError
-}) => {
-  class InMemoryBasePort {
-    constructor(public entities: EntityType[]) {
-      this.entities = entities
-    }
-
-// [...]
-export const InMemoryBasePortMixin = <EntityType>(args: ...) => buildInMemoryPort<EntityType>(args)
-
 // permission.port.in-memory.ts
 export class InMemoryPermissionPort
   extends InMemoryBasePortMixin<Permission>({
@@ -370,5 +425,30 @@ export class InMemoryPermissionPort
   }
 }
 
+```
+</span>
+
+----
+
+### Implementation
+#### Tests: **Doubles → Ports** 
+**😮**
+
+<span style="font-size:0.7em;">
+
+```typescript
+// base.port.in-memory.ts
+const buildInMemoryPort = <EntityType>(args: {
+  NotFoundError: typeof DomainError
+  AlreadyExistsError?: typeof DomainError
+}) => {
+  class InMemoryBasePort {
+    constructor(public entities: EntityType[]) {
+      this.entities = entities
+    }
+
+// [...]
+export const InMemoryBasePortMixin = <EntityType>(args: ...) => 
+  buildInMemoryPort<EntityType>(args)
 ```
 </span>
