@@ -88,8 +88,14 @@ solid-principles.md
 
 ----
 
-### Implementation
-#### Business logic: **Entity example** 
+#### Implementation
+##### Business logic: **Entity example** 
+
+<span style="font-size:0.75em;">
+
+> - Not a plain-old JS object representing a schema 
+> - Encapsulation & SOLID → OPEN-CLOSE Principle (Software entities should be open for extension, but closed for modification)
+> - Implement critical business rules that operates on business data
 
 ```typescript
 // permission.entity.ts
@@ -109,14 +115,19 @@ export abstract class Permission extends SoftDeleteEntity {
   }
 }
 ```
+</span>
 
 ----
 
-### Implementation
-#### Business logic: **Port example**
-> **Use Case ← PORT (interface) → Repository**
+#### Implementation
+##### Business logic: **Port example**
+
+> - Decoupled: Port, can be used with various adapters as long as interface is respected 
+
+<span style="font-size:0.8em;">
 
 ```typescript
+// Use Case ← PORT (interface) → Repository
 // permission.port.ts
 export interface PermissionPort {
   /**
@@ -125,33 +136,54 @@ export interface PermissionPort {
   findById(id: string): Promise<Permission>
 }
 ```
+</span>
 
 ----
 
-### Implementation
-#### Business logic: **Use case example** 
+#### Implementation
+##### Business logic: **Use case example** 
 
-<span style="font-size:0.75em;">
+> - Prosaic language
+> - Describe application-specific business rules
+> - Delegate critical business rules to entities
+> - SOLID → ISP (No client should be forced to depend on methods it does not use), DIP (Depend on abstractions, not on concretions)
+
+<span style="font-size:0.7em;">
 
 ```typescript
-// get-all-permissions.use-case.ts
+// create-permission.use-case.ts
 @Injectable()
-export class GetAllPermissions {
-  constructor(@Inject(PermissionPort) private permissionPort: PermissionPort) {}
+export class CreatePermission {
+  constructor(/** Dependency injection of port implementations, builder ...*/) {}
 
-  public async execute(): Promise<PermissionListItemOutput[]> {
-    const permissions = await this.findAllPermissions()
-    return this.mapOutput(permissions)
+  public async execute(
+    input: CreatePermissionInput,
+  ): Promise<PermissionDetailedOutput> {
+    const { id, scope, categoryId } = input
+
+    const existingScope = await this.retrieveScope(scope)
+    const existingCategory = await this.retrieveCategory(categoryId)
+
+    const newPermission = this.buildPermission(id, existingScope)
+    newPermission.organize(existingCategory)
+
+    const createdPermission = await this.permissionPort.create(newPermission)
+
+    return PermissionMapper.toDetailedOutput(createdPermission)
   }
 
-  private findAllPermissions(): Promise<Permission[]> {
-    return this.permissionPort.findAll()
+  private async retrieveScope(scopeId: string): Promise<Scope> {
+    return this.scopePort.findSingleById(scopeId)
   }
 
-  private mapOutput(permissions: Permission[]) {
-    return permissions.map((permission) =>
-      PermissionMapper.toListItemOutput(permission),
-    )
+  private async retrieveCategory(
+    categoryId: number,
+  ): Promise<PermissionCategory> {
+    return this.categoryPort.findById(categoryId)
+  }
+
+  private buildPermission(id: string, scope: Scope): Permission {
+    return this.permissionBuilder.init().withId(id).withScope(scope).build()
   }
 }
 ```
@@ -174,10 +206,17 @@ export class GetAllPermissions {
 
 ----
 
-### Implementation
-#### Infrastructure: **Controllers**
+#### Implementation
+##### Infrastructure: **Controllers**
 
-<span style="font-size:0.75em;">
+> - DRY (decorator reusability)
+> - Declarative (meaningfull names for decorators, clear role of each)
+> - Controller: answers 3 questions (no other responsability), 
+>   - which kind of request can pass through. 
+>   - which is the form of the data structure received. 
+>   - which is the form of the data structure to be sent. 
+
+<span style="font-size:0.7em;">
 
 ```typescript
 // reorganize-permission.controller.ts
@@ -205,9 +244,10 @@ export class ReorganizePermissionController {
 
 ----
 
-### Implementation
-#### Infrastructure: **Controllers**
+#### Implementation
+##### Infrastructure: **Controllers**
 
+> Small pause: implemented different interesting patterns & tools ^^
 > - We choose a "blacklist" approach to avoud the `@Expose` & `@Exclude` verbose decorators
 > - Nestjs Plugin to avoid `@ApiProperty` decorators
 
@@ -238,8 +278,12 @@ export class ReorganizePermissionParamsDto {
 
 ----
 
-### Implementation
-#### Infrastructure: **Persistence**
+#### Implementation
+##### Infrastructure: **Persistence**
+
+> - Adapter (respects the port interface)
+> - It interacts with the "external world" & returns a comprehensive expected data structure
+> - Here, an interesting pain point: in this case, a prisma object returned, how to convert it to an entity-business-like object as output
 
 <span style="font-size:0.7em;">
 
@@ -265,8 +309,8 @@ export class PermissionPortImpl implements PermissionPort {
 
 ----
 
-### Implementation
-#### Infrastructure: **Persistence, before we continue**
+#### Implementation
+##### Infrastructure: **Persistence, before we continue**
 
 <span style="font-size:0.7em;"> *To Know:* </span>
 
@@ -278,8 +322,12 @@ export class PermissionPortImpl implements PermissionPort {
 
 ----
 
-### Implementation
-#### Infrastructure: **Persistence**
+#### Implementation
+##### Infrastructure: **Persistence**
+
+> - Prisma, the ORM we are using (db detail) 
+>   - Needs the schema properties getters & setters both to be declared 
+>   - Prisma compliant toJSON method allowing to map entity into prisma accepted fields
 
 <span style="font-size:0.7em;">
 
@@ -311,14 +359,17 @@ export class PrismaPermission extends GetterSetterInheriter(
 
 ----
 
-### Implementation
-#### Infrastructure: **Mixins exemple** 
-**😮**
+#### Implementation
+##### Infrastructure: **Mixins exemple** 
 
-<span style="font-size:0.6em; width:100%;">
+> - Getters, setters in JS are not singly inherited <span style="font-size:0.7em;">(if one getter/setter exists and you decalre the missing one, it will not inherit, it will overwrite and ignore) </span>
+> - So, why not to play with JS to achieve this?
+> - Tool that builds the parent/child tree and recovers getters/setters & and match them in an "inherited way" 😮 </span>
+
+<span style="font-size:0.6em;">
 
 ```typescript
-// prisma-injector.mixin.ts
+// prisma-injector.mixin.ts 
 export const GetterSetterInheriter = <TBase extends Constructor>(Base: TBase ) => {
 
   return class extends Base {  
@@ -361,11 +412,81 @@ export const GetterSetterInheriter = <TBase extends Constructor>(Base: TBase ) =
 ----
 
 ### Implementation
-#### Tests: **Use case example**
+#### Tests: **Reminder (adapters & implementation)**
 
-> No mocks, in memory state
+<img src='./images/usecases/5-usecase.png' width='70%'/>
 
-<span style="font-size:0.5em;">
+----
+
+### Implementation
+#### Tests: **Doubles**
+
+![Implementation](./images/code_org/tests_inside.drawio.png)
+
+----
+
+#### Implementation
+##### Tests: **Doubles → Ports**
+
+> - Adapter (respects the port interface)
+> - In memory storage of state (entities)
+
+<span style="font-size:0.7em;">
+
+```typescript
+// permission.port.in-memory.ts
+export class InMemoryPermissionPort
+  extends InMemoryBasePortMixin<Permission>({
+    NotFoundError: PermissionNotFoundError,
+    AlreadyExistsError: PermissionAlreadyExistsError,
+  })
+  implements PermissionPort
+{
+  findAll(): Promise<Permission[]> {
+    return Promise.resolve(this.entities)
+  }
+}
+
+```
+</span>
+
+<!-- ----
+
+#### Implementation
+##### Tests: **Doubles → Ports** 
+
+
+<span style="font-size:0.7em;">
+
+```typescript
+// base.port.in-memory.ts
+const buildInMemoryPort = <EntityType>(args: {
+  NotFoundError: typeof DomainError
+  AlreadyExistsError?: typeof DomainError
+}) => {
+  class InMemoryBasePort {
+    constructor(public entities: EntityType[]) {
+      this.entities = entities
+    }
+
+// [...]
+export const InMemoryBasePortMixin = <EntityType>(args: ...) => 
+  buildInMemoryPort<EntityType>(args)
+```
+</span> -->
+
+----
+
+#### Implementation
+##### Tests: **Use case example**
+
+> - No mocks, in memory state 😮
+> - Exemple, preparation of getall permissions
+>   - We prepare it by first creating a category which is needed on a permission, 
+>   - then building the permission stub
+>   - finally, assigning it to the in-memory db 
+
+<span style="font-size:0.6em;">
 
 ```typescript
 describe('GetAllPermissionsUseCase', () => {
@@ -393,62 +514,5 @@ describe('GetAllPermissionsUseCase', () => {
       useCase = new GetAllPermissions(permissionPort)
     })
 // [...]
-```
-</span>
-
-----
-
-### Implementation
-#### Tests: **Doubles**
-
-![Implementation](./images/code_org/tests_inside.drawio.png)
-
-----
-
-### Implementation
-#### Tests: **Doubles → Ports** 
-**😮**
-
-<span style="font-size:0.7em;">
-
-```typescript
-// permission.port.in-memory.ts
-export class InMemoryPermissionPort
-  extends InMemoryBasePortMixin<Permission>({
-    NotFoundError: PermissionNotFoundError,
-    AlreadyExistsError: PermissionAlreadyExistsError,
-  })
-  implements PermissionPort
-{
-  findAll(): Promise<Permission[]> {
-    return Promise.resolve(this.entities)
-  }
-}
-
-```
-</span>
-
-----
-
-### Implementation
-#### Tests: **Doubles → Ports** 
-**😮**
-
-<span style="font-size:0.7em;">
-
-```typescript
-// base.port.in-memory.ts
-const buildInMemoryPort = <EntityType>(args: {
-  NotFoundError: typeof DomainError
-  AlreadyExistsError?: typeof DomainError
-}) => {
-  class InMemoryBasePort {
-    constructor(public entities: EntityType[]) {
-      this.entities = entities
-    }
-
-// [...]
-export const InMemoryBasePortMixin = <EntityType>(args: ...) => 
-  buildInMemoryPort<EntityType>(args)
 ```
 </span>
