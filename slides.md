@@ -307,7 +307,7 @@ export class PermissionPortImpl implements PermissionPort {
 ```
 </span>
 
-----
+<!-- ----
 
 #### Implementation
 ##### Infrastructure: **Persistence, before we continue**
@@ -317,7 +317,7 @@ export class PermissionPortImpl implements PermissionPort {
 - <span style="font-size:0.7em;"> getters, setters in JS are not singly inherited (if one getter/setter exists and you decalre the missing one, it will not inherit, it will overwrite and ignore)</span>
 - <span style="font-size:0.7em;"> Prisma, the ORM we are using (db detail) </span>
   - <span style="font-size:0.7em;"> needs the schema properties getters & setters both to be declared </span>
-  - <span style="font-size:0.7em;"> if schema properties are not explicitly exposed, it needs a toJSON method to expose them  </span>
+  - <span style="font-size:0.7em;"> if schema properties are not explicitly exposed, it needs a toJSON method to expose them  </span> -->
 
 
 ----
