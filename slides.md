@@ -438,6 +438,7 @@ _<small>Use the same language in your code as in your business</small>_
 #### Code Organization: **Business logic**
 
 ![Implementation](./images/code_org/business_logic.drawio.png)
+<img src="./images/clean-archi-1.png" alt="image" width="40%" height="auto" style="margin:0 0 0 4em">
 
 ----
 
@@ -473,6 +474,54 @@ export abstract class Permission extends SoftDeleteEntity {
 ----
 
 #### Implementation
+##### Business logic: **Use case example** 
+
+> - Prosaic language
+> - Describe application-specific business rules
+> - Delegate critical business rules to entities
+> - SOLID → ISP (No client should be forced to depend on methods it does not use), DIP (Depend on abstractions, not on concretions)
+
+<span style="font-size:0.7em;">
+
+```typescript
+// create-permission.use-case.ts
+@Injectable()
+export class CreatePermission {
+  constructor(/** Dependency injection of port implementations, builder ...*/) {}
+
+  async execute(
+    input: CreatePermissionInput,
+  ): Promise<PermissionDetailedOutput> {
+    const { id, scope, categoryId } = input
+
+    const { existingScope, existingCategory } = await this.retrieveData(scope, categoryId)
+
+    const newPermission = this.buildPermission(id, existingScope)
+    newPermission.organize(existingCategory)
+
+    const createdPermission = await this.permissionPort.create(newPermission)
+
+    return PermissionMapper.toDetailedOutput(createdPermission)
+  }
+
+  private async retrieveData(scope: string, categoryId: number) {
+    const [existingScope, existingCategory] = await Promise.all([
+      this.scopePort.findSingleById(scope),
+      this.categoryPort.findById(categoryId)
+    ])
+    return { existingScope, existingCategory }
+  }
+
+  private buildPermission(id: string, scope: Scope): Permission {
+    return this.permissionBuilder.init().withId(id).withScope(scope).build()
+  }
+```
+
+</span>
+
+----
+
+#### Implementation
 ##### Business logic: **Port example**
 
 > - Decoupled: Port, can be used with various adapters as long as interface is respected 
@@ -491,54 +540,77 @@ export interface PermissionPort {
 ```
 </span>
 
+
+----
+#### Implementation
+##### Business logic: **Don't do this**
+<span style="font-size:0.8em;">
+
+```typescript
+// grant-user-permission.use-case.ts
+// [...]
+await this.userPort.exists(userId)
+const permission = await this.permissionPort.findById(permissionId)
+const realScopeId = UserPermission.getFullScopeIdBasedOnPermissionScope({
+  relativeScopeId: relativeScopeId,
+  permissionScope: permission.scope,
+})
+const scope = await this.scopePort.findSingleById(realScopeId)
+let userPermission = await this.userPermissionPort.findFirst({
+  scope,
+  userId,
+})
+if (userPermission) {
+  let permissionHasBeenAdded = false
+  if (!userPermission.permissions.some((p) => p.id === permission.id)) {
+    userPermission.permissions.push(permission)
+    permissionHasBeenAdded = true
+  }
+  if (permissionHasBeenAdded) {
+    await this.userPermissionPort.update(userPermission)
+  }
+} else {
+  userPermission = this.userPermissionBuilder
+    .init()
+    .withPermissions([permission])
+    .withScope(scope)
+    .withUserId(userId)
+    .build()
+  await this.userPermissionPort.create(userPermission)
+}
+return UserPermissionMapper.toSpecificPermissionOutput(
+  permission,
+  true,
+  scope,
+  userId,
+)
+// [...]
+```
+
+</span>
+
 ----
 
 #### Implementation
-##### Business logic: **Use case example** 
-
-> - Prosaic language
-> - Describe application-specific business rules
-> - Delegate critical business rules to entities
-> - SOLID → ISP (No client should be forced to depend on methods it does not use), DIP (Depend on abstractions, not on concretions)
-
-<span style="font-size:0.7em;">
+##### Business logic: **Do this**
+<span style="font-size:0.8em;">
 
 ```typescript
-// create-permission.use-case.ts
-@Injectable()
-export class CreatePermission {
-  constructor(/** Dependency injection of port implementations, builder ...*/) {}
-
-  public async execute(
-    input: CreatePermissionInput,
-  ): Promise<PermissionDetailedOutput> {
-    const { id, scope, categoryId } = input
-
-    const existingScope = await this.retrieveScope(scope)
-    const existingCategory = await this.retrieveCategory(categoryId)
-
-    const newPermission = this.buildPermission(id, existingScope)
-    newPermission.organize(existingCategory)
-
-    const createdPermission = await this.permissionPort.create(newPermission)
-
-    return PermissionMapper.toDetailedOutput(createdPermission)
+// grant-user-permission.use-case.ts
+// [...]
+await this.checkUserExists(userId)
+const { userPermission: existingUserPermission, permission, scope } = await this.retrieveData(userId, permissionId, relativeScopeId)
+if (existingUserPermission) {
+  const permissionHasBeenAdded = existingUserPermission.injectPermission(permission)
+  if (permissionHasBeenAdded) {
+    await this.userPermissionPort.update(existingUserPermission)
   }
-
-  private async retrieveScope(scopeId: string): Promise<Scope> {
-    return this.scopePort.findSingleById(scopeId)
-  }
-
-  private async retrieveCategory(
-    categoryId: number,
-  ): Promise<PermissionCategory> {
-    return this.categoryPort.findById(categoryId)
-  }
-
-  private buildPermission(id: string, scope: Scope): Permission {
-    return this.permissionBuilder.init().withId(id).withScope(scope).build()
-  }
+} else {
+  const newUserPermission = this.buildUserPermission({ userId, permission, scope })
+  await this.userPermissionPort.create(newUserPermission)
 }
+return UserPermissionMapper.toSpecificPermissionOutput(permission, true, scope, userId)
+// [...]
 ```
 
 </span>
@@ -549,6 +621,7 @@ export class CreatePermission {
 #### **Infrastructure**
 
 ![Implementation](./images/code_org/infrastructure.drawio.png)
+<img src="./images/clean-archi-1.png" alt="image" width="40%" height="auto" style="margin:0 0 0 4em">
 
 ----
 
@@ -659,6 +732,22 @@ export class PermissionPortImpl implements PermissionPort {
 }
 ```
 </span>
+
+----
+#### Implementation
+##### Infrastructure: **Persistence, before we continue...**
+
+> Knowing that...
+> - getters, setters in JS are not singly inherited <span style="font-size:0.7em;">(if one getter/setter exists and you decalre the missing one, it will not inherit, it will overwrite and ignore)</span>
+> - Prisma & transformers needs the schema properties getters & setters both to be declared
+
+ How did might we have solved it? 
+> 1. We did it in Rust
+> 2. Pushed a PR to nodejs org
+> 3. Trick JS
+> 4. La réponse D 
+
+🤔
 
 <!-- ----
 
@@ -775,6 +864,22 @@ export const GetterSetterInheriter = <TBase extends Constructor>(Base: TBase ) =
 #### Tests: **Doubles**
 
 ![Implementation](./images/code_org/tests_inside.drawio.png)
+
+----
+#### Implementation
+##### Tests: **Adapters, before we continue...**
+
+> Knowing that...
+> there are several strategies to test where interactions with a db is needed like mocking (fake calls/results), in memory dbs, infrastructure db to test
+
+Which strategy do you thing we might have taken?  
+> 1. We did it in Rust
+> 2. Mock
+> 3. In memory db
+> 4. Infrastructure db
+> 5. La réponse D 
+
+🤔
 
 ----
 
