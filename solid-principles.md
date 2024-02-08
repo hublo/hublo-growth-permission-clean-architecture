@@ -106,7 +106,7 @@ class NativeShift extends Shift {
 
 ---
 
-## **Liskov Substitution Principle (LSP)** 
+## **Liskov Substitution** Principle (LSP) 
 
 Subtypes must be substitutable for their base types.
 
@@ -161,7 +161,7 @@ class PrismaMission extends Mission {
 
 ---
 
-## **Interface Segregation Principle (ISP)** 
+## **Interface Segregation** Principle (ISP) 
 
 No client should be forced to depend on methods it does not use.
 
@@ -192,7 +192,7 @@ interface AdminShiftService {
 ```
 ---
 
-## **Dependency Inversion Principle (DIP)** 
+## **Dependency Inversion**  Principle (DIP)
 
 Depend on abstractions, not on concretions.
 
