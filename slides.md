@@ -136,13 +136,12 @@ export abstract class Permission extends SoftDeleteEntity {
 export class CreatePermission {
   constructor(/** Dependency injection of port implementations, builder ...*/) {}
 
-  public async execute(
+  async execute(
     input: CreatePermissionInput,
   ): Promise<PermissionDetailedOutput> {
     const { id, scope, categoryId } = input
 
-    const existingScope = await this.retrieveScope(scope)
-    const existingCategory = await this.retrieveCategory(categoryId)
+    const { existingScope, existingCategory } = await this.retrieveData(scope, categoryId)
 
     const newPermission = this.buildPermission(id, existingScope)
     newPermission.organize(existingCategory)
@@ -152,20 +151,17 @@ export class CreatePermission {
     return PermissionMapper.toDetailedOutput(createdPermission)
   }
 
-  private async retrieveScope(scopeId: string): Promise<Scope> {
-    return this.scopePort.findSingleById(scopeId)
-  }
-
-  private async retrieveCategory(
-    categoryId: number,
-  ): Promise<PermissionCategory> {
-    return this.categoryPort.findById(categoryId)
+  private async retrieveData(scope: string, categoryId: number) {
+    const [existingScope, existingCategory] = await Promise.all([
+      this.scopePort.findSingleById(scope),
+      this.categoryPort.findById(categoryId)
+    ])
+    return { existingScope, existingCategory }
   }
 
   private buildPermission(id: string, scope: Scope): Permission {
     return this.permissionBuilder.init().withId(id).withScope(scope).build()
   }
-}
 ```
 
 </span>
@@ -194,46 +190,48 @@ export interface PermissionPort {
 
 ----
 #### Implementation
-##### Business logic: **Spaghetti example**
+##### Business logic: **Don't do this**
 <span style="font-size:0.8em;">
 
 ```typescript
-// grant-user-permission.spaghetti.use-case.ts
+// grant-user-permission.use-case.ts
+// [...]
 await this.userPort.exists(userId)
-    const permission = await this.permissionPort.findById(permissionId)
-    const realScopeId = UserPermission.getFullScopeIdBasedOnPermissionScope({
-      relativeScopeId: relativeScopeId,
-      permissionScope: permission.scope,
-    })
-    const scope = await this.scopePort.findSingleById(realScopeId)
-    let userPermission = await this.userPermissionPort.findFirst({
-      scope,
-      userId,
-    })
-    if (userPermission) {
-      let permissionHasBeenAdded = false
-      if (!userPermission.permissions.some((p) => p.id === permission.id)) {
-        userPermission.permissions.push(permission)
-        permissionHasBeenAdded = true
-      }
-      if (permissionHasBeenAdded) {
-        await this.userPermissionPort.update(userPermission)
-      }
-    } else {
-      userPermission = this.userPermissionBuilder
-        .init()
-        .withPermissions([permission])
-        .withScope(scope)
-        .withUserId(userId)
-        .build()
-      await this.userPermissionPort.create(userPermission)
-    }
-    return UserPermissionMapper.toSpecificPermissionOutput(
-      permission,
-      true,
-      scope,
-      userId,
-    )
+const permission = await this.permissionPort.findById(permissionId)
+const realScopeId = UserPermission.getFullScopeIdBasedOnPermissionScope({
+  relativeScopeId: relativeScopeId,
+  permissionScope: permission.scope,
+})
+const scope = await this.scopePort.findSingleById(realScopeId)
+let userPermission = await this.userPermissionPort.findFirst({
+  scope,
+  userId,
+})
+if (userPermission) {
+  let permissionHasBeenAdded = false
+  if (!userPermission.permissions.some((p) => p.id === permission.id)) {
+    userPermission.permissions.push(permission)
+    permissionHasBeenAdded = true
+  }
+  if (permissionHasBeenAdded) {
+    await this.userPermissionPort.update(userPermission)
+  }
+} else {
+  userPermission = this.userPermissionBuilder
+    .init()
+    .withPermissions([permission])
+    .withScope(scope)
+    .withUserId(userId)
+    .build()
+  await this.userPermissionPort.create(userPermission)
+}
+return UserPermissionMapper.toSpecificPermissionOutput(
+  permission,
+  true,
+  scope,
+  userId,
+)
+// [...]
 ```
 
 </span>
@@ -241,23 +239,25 @@ await this.userPort.exists(userId)
 ----
 
 #### Implementation
-##### Business logic: **Lasagna example**
+##### Business logic: **Do this**
 <span style="font-size:0.8em;">
 
 ```typescript
 // grant-user-permission.use-case.ts
+// [...]
 await this.checkUserExists(userId)
-    const { userPermission: existingUserPermission, permission, scope } = await this.retrieveData(userId, permissionId, relativeScopeId)
-    if (existingUserPermission) {
-      const permissionHasBeenAdded = existingUserPermission.injectPermission(permission)
-      if (permissionHasBeenAdded) {
-        await this.userPermissionPort.update(existingUserPermission)
-      }
-    } else {
-      const newUserPermission = this.buildUserPermission({ userId, permission, scope })
-      await this.userPermissionPort.create(newUserPermission)
-    }
-    return UserPermissionMapper.toSpecificPermissionOutput(permission, true, scope, userId)
+const { userPermission: existingUserPermission, permission, scope } = await this.retrieveData(userId, permissionId, relativeScopeId)
+if (existingUserPermission) {
+  const permissionHasBeenAdded = existingUserPermission.injectPermission(permission)
+  if (permissionHasBeenAdded) {
+    await this.userPermissionPort.update(existingUserPermission)
+  }
+} else {
+  const newUserPermission = this.buildUserPermission({ userId, permission, scope })
+  await this.userPermissionPort.create(newUserPermission)
+}
+return UserPermissionMapper.toSpecificPermissionOutput(permission, true, scope, userId)
+// [...]
 ```
 
 </span>
