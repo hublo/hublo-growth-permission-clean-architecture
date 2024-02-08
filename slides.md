@@ -974,3 +974,12 @@ describe('GetAllPermissionsUseCase', () => {
 // [...]
 ```
 </span>
+
+
+---
+
+### The End
+##### We hope you liked it .. 😴 .. time to wake up
+
+
+Q & A ? 
