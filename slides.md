@@ -71,6 +71,13 @@ solid-principles.md
 
 ---
 
+### Context
+
+- A feature grownd up to be built
+- A feature to be used by several teams
+
+---
+
 ### Implementation
 #### Code Organization: **Base organization**
 
@@ -307,6 +314,22 @@ export class PermissionPortImpl implements PermissionPort {
 ```
 </span>
 
+----
+#### Implementation
+##### Infrastructure: **Persistence, before we continue...**
+
+> Knowing that...
+> - getters, setters in JS are not singly inherited <span style="font-size:0.7em;">(if one getter/setter exists and you decalre the missing one, it will not inherit, it will overwrite and ignore)</span>
+> - Prisma & transformers needs the schema properties getters & setters both to be declared
+
+ How did might we have solved it? 
+> 1. We did it in Rust
+> 2. Pushed a PR to nodejs org
+> 3. Trick JS
+> 4. La réponse D 
+
+🤔
+
 <!-- ----
 
 #### Implementation
@@ -422,6 +445,22 @@ export const GetterSetterInheriter = <TBase extends Constructor>(Base: TBase ) =
 #### Tests: **Doubles**
 
 ![Implementation](./images/code_org/tests_inside.drawio.png)
+
+----
+#### Implementation
+##### Tests: **Adapters, before we continue...**
+
+> Knowing that...
+> there are several strategies to test where interactions with a db is needed like mocking (fake calls/results), in memory dbs, infrastructure db to test
+
+Which strategy do you thing we might have taken?  
+> 1. We did it in Rust
+> 2. Mock
+> 3. In memory db
+> 4. Infrastructure db
+> 5. La réponse D 
+
+🤔
 
 ----
 
