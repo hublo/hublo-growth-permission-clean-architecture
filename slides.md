@@ -85,6 +85,7 @@ solid-principles.md
 #### Code Organization: **Business logic**
 
 ![Implementation](./images/code_org/business_logic.drawio.png)
+<img src="./images/clean-archi-1.png" alt="image" width="40%" height="auto" style="margin:0 0 0 4em">
 
 ----
 
@@ -196,6 +197,7 @@ export class CreatePermission {
 #### **Infrastructure**
 
 ![Implementation](./images/code_org/infrastructure.drawio.png)
+<img src="./images/clean-archi-1.png" alt="image" width="40%" height="auto" style="margin:0 0 0 4em">
 
 ----
 
