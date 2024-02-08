@@ -28,34 +28,393 @@ Note: speaker notes FTW!
 
 ---
 
-## Clean Architecture
+![SOLID](./images/solid_noir.png)
 
 ---
 
-### What is Clean Architecture?
-- **Purpose:** Design software with loose coupling and high cohesion.
-- **Structure:** Organized into layers with:
-  - **Entities** at the core (business objects and rules).
-  - **Use Cases** encapsulating business logic.
-  - **Interface Adapters** translating between web, database, and external agency formats.
-  - **Frameworks & Drivers** as the outermost layer (UIs, databases).
-- **Key Concept:** Dependency Rule - Dependencies must point inward, from outer layers to inner layers.
+## **Single Responsibility Principle (SRP)**
+
+A class should have only one reason to change.
+
+----
+### Single Responsibility Principle (SRP)
+#### **DON'T DO THIS**
+
+_<small>It may look suitable for a developer to have only one method to get shifts from an hubler</small>_
+
+```typescript
+class Hubler {
+  getShifts() {
+    // send shifts done by hubler
+  }
+}
+```
+Note: Je parle ici de mes grosses baloches
+----
+### Single Responsibility Principle (SRP)
+#### **DO THIS**
+_<small>Getting shifts of a given hubler is not the same if we want to display the calendar or if we want to know their planning from an admin point of view as different rules may apply to retrieve them</small>_
+
+```typescript
+class HublerPlanning {
+  getShifts() {
+    // send shifts done by hubler
+  }
+}
+
+class InstitutionHublerAvailabilities {
+  getShifts() {
+    // send shifts done by hubler in an institution
+  }
+}
+```
+---
+
+## **Open/Closed** Principle (OCP)
+
+Software entities should be open for extension, but closed for modification.
+
+----
+### Open/Closed Principle (OCP)
+#### **DON'T DO THIS**
+<span style="font-size: 0.8em">
+
+```typescript
+class Shift {
+  post() {
+    // save in DB
+    this.notify();
+  }
+  notify() {
+    // send notification to hubler of the institution
+  }
+}
+class HubloPoolShift extends Shift {
+  notify() {
+    // send notification to hublo poolers
+  }
+}
+```
+
+</span>
+
+----
+### Open/Closed Principle (OCP)
+#### **DO THIS**
+
+<span style="font-size: 0.8em">
+
+```typescript
+abstract class Shift {
+  post() {
+    // save in DB
+    this.notify();
+  }
+  abstract notify();
+}
+
+class HubloPoolShift extends Shift {
+  notify() {
+    // send notification to hublo pool
+  }
+}
+
+class NativeShift extends Shift {
+  notify() {
+    // send notification to hubler
+  }
+}
+```
+</span>
 
 ---
 
-### SOLID Principles
-solid-principles.md
+## **Liskov Substitution** Principle (LSP)
+
+Subtypes must be substitutable for their base types.
+
+----
+### Liskov Substitution Principle (LSP)
+#### LISKOV PRINCIPLE **VIOLATION**
+
+_<small>By weakening the return type</small>_
+
+<span style="font-size: 0.8em">
+
+```typescript
+interface MissionPort {
+  findMission(): Promise<Mission>
+}
+
+class MissionRepository extends MissionPort {
+  findMission() {
+    const mission = this.missions.find(mission => mission.id === id)
+  
+      
+    // returns Promise<Mission | undefined> instead of Promise<Mission>
+    return Promise.resolve(mission);
+  }
+}
+```
+
+</span>
+
+----
+### Liskov Substitution Principle (LSP)
+#### LISKOV PRINCIPLE **VIOLATION**
+
+_<small>By strengthening the preconditions</small>_
+
+```typescript
+class Mission {
+    setIdMotif(idMotif: number) {
+        this.idMotif = idMotif;
+    }
+}
+
+class PrismaMission extends Mission {
+    setIdMotif(idMotif: number) {
+        if (idMotif === 1) {
+            throw new Error('Invalid idMotif');
+        }
+        this.idMotif = idMotif;
+    }
+}
+```
 
 ---
 
+## **Interface Segregation** Principle (ISP)
+
+No client should be forced to depend on methods it does not use.
+
+----
+### Interface Segregation Principle (ISP)
+#### **DON'T DO THIS**
+```typescript
+interface UserShiftService {
+  createShift();
+  getShift();
+  fillShift();
+  updateShift();
+}
+```
+----
+### Interface Segregation Principle (ISP)
+#### **DO THIS**
+```typescript
+interface HublerShiftService {
+  getShift();
+  fillShift();
+}
+
+interface AdminShiftService {
+  createShift();
+  updateShift();
+}
+```
 ---
 
-### Benefits of Clean Architecture
-- **Flexibility:** Easily adapt to new requirements without significant rework.
-- **Testability:** Independent layers allow for unit testing of business logic without UI, database, or external dependencies.
-- **Maintainability:** Simplified updates and enhancements with minimal impact on existing functionality.
-- **Readability:** Clear separation of concerns makes it easier for product managers and new developers to understand the system structure.
-- **Framework Independence:** Business rules are not tied to the technology stack, making it easier to switch frameworks or libraries.
+## **Dependency Inversion**  Principle (DIP)
+
+Depend on abstractions, not on concretions.
+
+----
+### Dependency Inversion Principle (DIP)
+#### **DON'T DO THIS**
+
+_<small>For each persistence we need to redefine a whole new service even if the business logic is the same</small>_
+
+<span style="font-size: 0.6em">
+
+```typescript
+class ShiftOfferService {
+  constructor() {
+    this.db = new ShiftOfferMongoDB();
+  }
+  
+  postShiftOffer() {
+    this.db.save();
+  }
+}
+
+class HubloPoolShiftOfferService extends ShiftOfferService {
+  constructor() {
+    this.db = new HubloPoolShiftOfferMongoDB();
+  }
+}
+
+class TestShiftOfferService extends ShiftOfferService {
+  constructor() {
+    this.db = new InMemoryDb();
+  }
+}
+```
+
+</span>
+
+----
+### Dependency Inversion Principle (DIP)
+#### **DO THIS**
+
+
+_<small>You inject the accurate persistence layer directly</small>_
+
+<span style="font-size: 0.8em">
+
+```typescript
+interface ShiftOfferRepository {
+  save();
+}
+
+class MongoDBShiftOfferRepository implements ShiftOfferRepository {
+  //...
+}
+
+class ShiftOfferService {
+  constructor(private db: ShiftOfferRepository) {}
+  
+  postShiftOffer() {
+    this.db.save();
+  }
+}
+```
+
+</span>
+
+---
+
+# Clean architecture
+
+---
+
+## Details
+
+----
+
+### The database
+
+_<small>Don't base your data model on how it's actually stored</small>_
+
+----
+
+### The framework
+
+_<small>Don't comply to the framework. Use the framework to comply to your business</small>_
+
+----
+
+### The interface
+
+_<small>Don't tie your business to your interface</small>_
+
+---
+
+## Not details
+
+----
+
+### The business rules
+
+----
+
+#### **The entities**
+
+- Object that contain or have easy access to business data
+- They implement the critical business rules that operate on that data
+- They are not plain-old TS objects representing the DB schema
+
+----
+
+#### **The use cases**
+
+- They define the way an automated system is used
+- They specify the inputs to be provided and outputs to be returned to the user
+- They describe application-specific business rules
+- They don't know in which environment they are running
+
+---
+
+## The dependency rule
+
+<img src="./images/clean-archi-1.png" height="500">
+
+---
+
+## A use-case, step by step
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/1-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/2-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/3-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/4-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/5-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/4-usecase.png)
+
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/6-usecase.png)
+
+----
+
+<!-- .slide: data-transition="fade" -->
+
+![](./images/usecases/7-usecase.png)
+
+---
+
+## **Entities**, grosso modo
+
+![](./images/entity.png)
+
+---
+
+## Things to keep in mind
+
+----
+
+### Readability
+
+_<small>Prosaic code is easier to read and understand</small>_
+
+----
+
+### Ubiquitous language
+
+_<small>Use the same language in your code as in your business</small>_
+
+> Use a glossary to be sure everybody use the same words
 
 ---
 
