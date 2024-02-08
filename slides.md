@@ -873,7 +873,7 @@ export const GetterSetterInheriter = <TBase extends Constructor>(Base: TBase ) =
 > there are several strategies to test where interactions with a db is needed like mocking (fake calls/results), in memory dbs, infrastructure db to test
 
 Which strategy do you thing we might have taken?  
-> 1. We did it in Rust
+> 1. Who tests nowadays?
 > 2. Mock
 > 3. In memory db
 > 4. Infrastructure db
