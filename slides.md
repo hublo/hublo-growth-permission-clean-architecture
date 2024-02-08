@@ -10,7 +10,6 @@ theme: ./theme/hublo.css
 
 ## Clean architecture
 
-Note: mes grosses baloches
 ---
 
 ## Context
@@ -55,7 +54,6 @@ class Hubler {
   }
 }
 ```
-Note: Je parle ici de mes grosses baloches
 ----
 ### Single Responsibility Principle (SRP)
 #### **DO THIS**
