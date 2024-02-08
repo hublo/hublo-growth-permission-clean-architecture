@@ -15,6 +15,7 @@ theme: ./theme/hublo.css
   - objective 1
   - objective 2
   - objective 3
+  - Objectif lune
 
 > Best Team Ever.
 
